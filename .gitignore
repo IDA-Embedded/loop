@@ -1,0 +1,10 @@
+/ESP-32/main/model.h
+/ESP-32/main/model.c
+/ESP-32/sdkconfig
+/ESP-32/.vscode
+/ESP-32/build
+/ESP-32/managed_components
+/ESP-32/dependencies.lock
+/Python/model.h5
+/Python/.idea
+/Python/__pycache__
