@@ -136,4 +136,9 @@ with open("../ESP-32/main/model.c", 'w') as c_file:
             c_file.write('\n')
     c_file.write('\n};\n')
 
+
+    # Save TensorFlow Lite model
+with open("loop_model.tflite", "wb") as f:
+    f.write(tflite_model)
+
 print('Done.')
