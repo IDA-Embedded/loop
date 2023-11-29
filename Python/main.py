@@ -1,5 +1,6 @@
 import os
 import keras
+import utils.calc_mem
 from keras.models import Sequential
 from keras.layers import Dense, Conv1D, Flatten
 from matplotlib import pyplot as plt
@@ -135,5 +136,10 @@ with open("../ESP-32/main/model.c", 'w') as c_file:
         if (i + 1) % 12 == 0:
             c_file.write('\n')
     c_file.write('\n};\n')
+
+# Save TensorFlow Lite model and print memory
+with open("model.tflite", "wb") as f:
+    f.write(tflite_model)
+utils.calc_mem.calc_mem("model.tflite")
 
 print('Done.')

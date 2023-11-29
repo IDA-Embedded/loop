@@ -5,6 +5,7 @@
 /ESP-32/build
 /ESP-32/managed_components
 /ESP-32/dependencies.lock
-/Python/model.h5
+/Python/*.h5
 /Python/.idea
 /Python/__pycache__
+/Python/*.tflite
