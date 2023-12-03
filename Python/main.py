@@ -4,7 +4,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Conv1D, Flatten
 
-import utils.calc_mem
+from utils.calc_mem import calc_mem
 from preprocess import preprocess, WINDOW_SIZE, SPECTRUM_SIZE, SPECTRUM_MEAN, SPECTRUM_STD, SAMPLE_RATE, FRAME_SIZE, FRAME_STRIDE
 from utils.export_tflite import write_model_h_file, write_model_c_file
 from utils.plots import plot_dataset, plot_learning_curves, plot_convolution_filters, plot_first_positive_window, plot_predictions_vs_labels
@@ -67,11 +67,11 @@ model.fit(x_train, y_train, epochs=100, batch_size=128, validation_data=(x_val, 
 # Plot learning curves
 plot_learning_curves(model, block=False)
 
-# Plot the 8 convolution filters of the first layer
-plot_convolution_filters(8, model.layers[0], block=False)
-
 # Plot the first window that has a positive label
 plot_first_positive_window(x, y, block=False)
+
+# Plot the 8 convolution filters of the first layer
+plot_convolution_filters(8, model.layers[0], block=False)
 
 # Load best model
 model = keras.models.load_model('model.h5')
@@ -101,7 +101,7 @@ print('False negatives:    ', int(confusion_matrix[1, 0]))
 # Plot predictions vs labels
 plot_predictions_vs_labels(y_pred, y_test, block=True)
 
-# Convert to TensorFlow Lite model with quantization
+# Convert to TensorFlow Lite model
 print('Converting to TensorFlow Lite model...')
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 tflite_model = converter.convert()
@@ -121,6 +121,6 @@ write_model_c_file('../ESP-32/main/model.c', tflite_model)
 # Save TensorFlow Lite model and print memory
 with open("model.tflite", "wb") as f:
     f.write(tflite_model)
-utils.calc_mem.calc_mem("model.tflite")
+calc_mem("model.tflite")
 
 print('Done.')
