@@ -7,7 +7,7 @@ from scipy.io import wavfile
 # Sample rate is 16kHz
 SAMPLE_RATE = 16000
 
-# FFT frame size is 256 samples (16ms) and stride is 128 samples (8ms)
+# FFT frame size is 256 samples (16ms) and stride is 256 samples (16ms)
 FRAME_SIZE = 256
 FRAME_STRIDE = 256
 
