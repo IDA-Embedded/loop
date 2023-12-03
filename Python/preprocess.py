@@ -45,18 +45,6 @@ def preprocess(wav_file: str, label_file: str):
     # Normalize data
     spectral_frames = (spectral_frames - SPECTRUM_MEAN) / SPECTRUM_STD
 
-    """
-    # Plot the spectrogram of first 10000 frames = 160 seconds
-    plt.figure(figsize=(12, 6))
-    plt.imshow(spectral_frames[0:10000].T, aspect='auto', origin='lower')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Frequency (Hz)')
-    tick_frames = np.arange(0, 10000, 10 * SAMPLE_RATE / FRAME_STRIDE)
-    tick_labels = np.round(tick_frames * FRAME_STRIDE / SAMPLE_RATE, 2)
-    plt.xticks(tick_frames, labels=tick_labels)
-    plt.show()
-    """
-
     # Stack frames into windows
     windows = []
     for i in range(0, len(spectral_frames) - WINDOW_SIZE, WINDOW_STRIDE):
@@ -84,4 +72,3 @@ def preprocess(wav_file: str, label_file: str):
         y[start_window:end_window] = 1
 
     return x, y
-
