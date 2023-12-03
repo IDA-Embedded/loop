@@ -75,23 +75,27 @@ plot_first_positive_window(x, y, block=False)
 # Load best model
 model = keras.models.load_model('model.h5')
 
-# Evaluate model on test set
-loss, accuracy = model.evaluate(x_test, y_test)
+# Evaluate model on validation and test sets
+val_loss, val_accuracy = model.evaluate(x_val, y_val)
+test_loss, test_accuracy = model.evaluate(x_test, y_test)
+y_pred = model.predict(x_test)
 
 # Print evaluation metrics
-print('Test loss:', loss)
-print('Test accuracy:', accuracy)
+print()
+print('Validation loss:     %.4f' % val_loss)
+print('Validation accuracy: %.4f' % val_accuracy)
+print('Test loss:           %.4f' % test_loss)
+print('Test accuracy:       %.4f' % test_accuracy)
 
 # Print confusion matrix
-y_pred = model.predict(x_test)
 y_pred_bool = np.round(y_pred)
 confusion_matrix = np.zeros((2, 2))
 for i in range(len(y_pred_bool)):
     confusion_matrix[int(y_test[i]), int(y_pred_bool[i, 0])] += 1
-print('Correct positives:', int(confusion_matrix[1, 1]))
-print('Correct negatives:', int(confusion_matrix[0, 0]))
-print('False positives:', int(confusion_matrix[0, 1]))
-print('False negatives:', int(confusion_matrix[1, 0]))
+print('True positives:     ', int(confusion_matrix[1, 1]))
+print('True negatives:     ', int(confusion_matrix[0, 0]))
+print('False positives:    ', int(confusion_matrix[0, 1]))
+print('False negatives:    ', int(confusion_matrix[1, 0]))
 
 # Plot predictions vs labels
 plot_predictions_vs_labels(y_pred, y_test, block=True)

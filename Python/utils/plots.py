@@ -84,10 +84,10 @@ def plot_first_positive_window(x: np.ndarray, y: np.ndarray, block: bool):
 
 def plot_predictions_vs_labels(y_pred: np.ndarray, y_test: np.ndarray, block: bool):
     plt.figure(figsize=(12, 6))
-    plt.plot(y_test)
-    plt.plot(-y_pred)  # Negate predictions to make them easier to see
+    plt.plot(y_pred, color='blue')
+    plt.plot(-y_test, color='green')  # Negate labels to make them easier to see
     plt.title('Test set predictions vs labels')
-    plt.xlabel('Frame')
+    plt.xlabel('Window')
     plt.ylabel('Prediction')
-    plt.legend(['Label', 'Prediction'])
+    plt.legend(['Prediction', 'Label'])
     plt.show(block=block)
