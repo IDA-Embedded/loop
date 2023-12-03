@@ -6,6 +6,7 @@ from keras.layers import Dense, Conv1D, Flatten
 
 import utils.calc_mem
 from preprocess import preprocess, WINDOW_SIZE, SPECTRUM_SIZE, SPECTRUM_MEAN, SPECTRUM_STD, SAMPLE_RATE, FRAME_SIZE, FRAME_STRIDE
+from utils.export_tflite import write_model_h_file, write_model_c_file
 from utils.plots import plot_dataset, plot_learning_curves, plot_convolution_filters, plot_first_positive_window, plot_predictions_vs_labels
 
 # Minimize TensorFlow logging
@@ -105,33 +106,17 @@ print('Converting to TensorFlow Lite model...')
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 tflite_model = converter.convert()
 
-# Export TensorFlow Lite model to c++ source file
-print('Exporting TensorFlow Lite model to c++ source files...')
-# TODO: Move to util function
-# Write header file
-with open("../ESP-32/main/model.h", 'w') as h_file:
-    h_file.write('#ifndef MODEL_H\n')
-    h_file.write('#define MODEL_H\n')
-    h_file.write('\n')
-    h_file.write('#define SAMPLE_RATE ' + str(SAMPLE_RATE) + '\n')
-    h_file.write('#define FRAME_SIZE ' + str(FRAME_SIZE) + '\n')
-    h_file.write('#define FRAME_STRIDE ' + str(FRAME_STRIDE) + '\n')
-    h_file.write('#define WINDOW_SIZE ' + str(WINDOW_SIZE) + '\n')
-    h_file.write('#define SPECTRUM_SIZE ' + str(SPECTRUM_SIZE) + '\n')
-    h_file.write('#define SPECTRUM_MEAN ' + str(SPECTRUM_MEAN) + '\n')
-    h_file.write('#define SPECTRUM_STD ' + str(SPECTRUM_STD) + '\n')
-    h_file.write('\n')
-    h_file.write('extern const unsigned char model_binary[];\n')
-    h_file.write('\n')
-    h_file.write('#endif\n')
-# Write source file
-with open("../ESP-32/main/model.c", 'w') as c_file:
-    c_file.write('const unsigned char model_binary[] = {\n')
-    for i, byte in enumerate(tflite_model):
-        c_file.write(f'0x{byte:02x}, ')
-        if (i + 1) % 12 == 0:
-            c_file.write('\n')
-    c_file.write('\n};\n')
+# Export TensorFlow Lite model to C source files
+print('Exporting TensorFlow Lite model to C source files...')
+defines = {"SAMPLE_RATE": SAMPLE_RATE,
+           "FRAME_SIZE": FRAME_SIZE,
+           "FRAME_STRIDE": FRAME_STRIDE,
+           "WINDOW_SIZE": WINDOW_SIZE,
+           "SPECTRUM_SIZE": SPECTRUM_SIZE,
+           "SPECTRUM_MEAN": SPECTRUM_MEAN,
+           "SPECTRUM_STD": SPECTRUM_STD}
+write_model_h_file("../ESP-32/main/model.h", defines)
+write_model_c_file('../ESP-32/main/model.c', tflite_model)
 
 # Save TensorFlow Lite model and print memory
 with open("model.tflite", "wb") as f:
