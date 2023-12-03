@@ -1,0 +1,33 @@
+menu "Project Settings"
+
+config SAMPLE_RATE
+int "Sample Rate"
+default 16000
+help=
+    Example help
+
+config FRAME_SIZE
+int "Frame Size"
+default 256
+
+config FRAME_STRIDES
+int "Frame Strides"
+default 256
+
+config WINDOW_SIZE
+int "Window Size"
+default 32
+
+config SPECTRUM_SIZE
+int "Spectrum Size"
+default 48
+
+config SPECTRUM_MEAN
+string "Spectrum Mean"
+default 9.0
+
+config SPECTRUM_STD
+string "Spectrum Std"
+default 1.2
+
+endmenu
