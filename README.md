@@ -18,7 +18,35 @@ Training data should be placed in the `Data` folder. Each recording should provi
 
 ## Getting started - Python and TensorFlow
 
-To be written.
+* It's generally recommended to use python virtual environments when working with different python projects to handle dependencies/packages.
+
+
+[Python documentation](https://docs.python.org/3.10/library/venv.html)
+
+[Real python guide on venv](https://realpython.com/python-virtual-environments-a-primer/)
+
+### Linux setup:
+
+> Python version 3.10 or newer is required
+
+1. Install python environment: (Debian package manager in this example. Use yours)
+    ```sh
+        sudo apt install python3-venv
+    ```
+2. Create virtual environment and activate enviroment: (Source to activate the virtual environment)
+    ```sh
+        python3 -m venv venv && source ./venv/bin/activate
+    ```
+> Note: If you restart your terminal session, you have to reactivate your virtual enviroment.
+
+3. Install dependencies:
+    ```sh
+        pip install -r requirements.txt
+    ```
+4. Run scripts
+    ```sh
+        python3 main.py
+    ```
 
 ## Getting started - ESP-32
 
