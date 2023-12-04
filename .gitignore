@@ -8,4 +8,7 @@
 /Python/*.h5
 /Python/.idea
 /Python/__pycache__
+/Python/utils/__pycache__
 /Python/*.tflite
+venv
+/Python/venv

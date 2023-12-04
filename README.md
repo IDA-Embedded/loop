@@ -39,9 +39,9 @@ Training data should be placed in the `Data` folder. Each recording should provi
     ```
 > Note: If you restart your terminal session, you have to reactivate your virtual enviroment.
 
-3. Install dependencies:
+3. Upgrade pip and install dependencies:
     ```sh
-        pip install -r requirements.txt
+        pip install --upgrade pip && pip install -r requirements.txt
     ```
 4. Run scripts
     ```sh
