@@ -16,6 +16,10 @@ Training data should be placed in the `Data` folder. Each recording should provi
 * A .wav file with 16 bit mono audio in 16 kHz. Its file name should be `audio_`*\<id\>*`.wav`, where *\<id\>* can be any unique string that identifies the recording.
 * A .txt file with labels indicating the starting and ending times of each bell sound in the recording. Each row contains a starting time in seconds, the ending time in seconds and a label name, separated by a tab character. This conforms to Audacity's label file format. Its file name should be `label_`*\<id\>*`.txt`, where *\<id\>* is the recording identifier.
 
+## Workshop slides
+
+* Workshop 2: https://docs.google.com/presentation/d/1cRfUvB82cQw7qil6pJezRVyu-Q3wIUR1_X0M9sBXE_U
+
 ## Getting started - Python and TensorFlow
 
 * It's generally recommended to use python virtual environments when working with different python projects to handle dependencies/packages.
