@@ -18,6 +18,8 @@ Training data should be placed in the `Data` folder. Each recording should provi
 
 ## Workshop slides
 
+* Workshop 1, pt1: https://docs.google.com/presentation/d/1sHdKvCfU3POFcieIaY5EiciCT2IkQdf8hQkFwgwcssI
+* Workshop 1, pt2: https://docs.google.com/presentation/d/1Or0dlfwEeps-LqslExg2k3uU2bS3sLQUAZxr2nw6lvo
 * Workshop 2: https://docs.google.com/presentation/d/1cRfUvB82cQw7qil6pJezRVyu-Q3wIUR1_X0M9sBXE_U
 
 ## Getting started - Python and TensorFlow
