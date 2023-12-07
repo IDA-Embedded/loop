@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_log.h"
 
 // Include TFLM
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
@@ -26,11 +27,12 @@
 #define TENSOR_ARENA_SIZE (30 * 1024)
 
 // Static variables
-static const tflite::Model* model = nullptr;
-static tflite::MicroInterpreter* interpreter = nullptr;
+static const tflite::Model *model = nullptr;
+static tflite::MicroInterpreter *interpreter = nullptr;
 static uint8_t tensor_arena[TENSOR_ARENA_SIZE];
-static TfLiteTensor* input = nullptr;
-static TfLiteTensor* output = nullptr;
+static TfLiteTensor *input = nullptr;
+static TfLiteTensor *output = nullptr;
+static const char *TAG = "Inference";
 
 /**
  * @brief Main setup function.
@@ -41,7 +43,7 @@ void setup(void)
     model = tflite::GetModel(model_binary);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
-        printf("Model schema mismatch!\n");
+        ESP_LOGE(TAG, "Model schema mismatch!");
         abort();
     }
 
@@ -61,7 +63,7 @@ void setup(void)
     // Allocate memory for input and output tensors
     if (interpreter->AllocateTensors() != kTfLiteOk)
     {
-        printf("Failed to allocate tensors!");
+        ESP_LOGE(TAG, "Failed to allocate tensors!");
         abort();
     }
 
@@ -70,16 +72,15 @@ void setup(void)
     output = interpreter->output(0);
 
     // Print input and output tensor dimensions
-    printf("Input tensor shape: %d, %d, %d\n", input->dims->data[0], input->dims->data[1], input->dims->data[2]);
-    printf("Output tensor shape: %d\n", output->dims->data[0]);
-    
+    ESP_LOGI(TAG, "Input tensor shape: %d, %d, %d", input->dims->data[0], input->dims->data[1], input->dims->data[2]);
+    ESP_LOGI(TAG, "Output tensor shape: %d\n", output->dims->data[0]);
     // Initialize audio with gain 16.0 (found experimentally)
     audio_init(16.0f, FRAME_STRIDE);
 
     // Initialize preprocessing
     if (!preprocess_init())
     {
-        printf("Failed to initialize preprocessing!\n");
+        ESP_LOGE(TAG, "Failed to initialize preprocessing!");
         abort();
     }
 }
@@ -90,7 +91,7 @@ void setup(void)
 void loop(void)
 {
     // Obtain audio frame
-    float* audio_frame = audio_read();
+    float *audio_frame = audio_read();
 
     // Put and preprocess audio frame
     preprocess_put_audio(audio_frame);
@@ -101,17 +102,18 @@ void loop(void)
     {
         // Run inference
         if (interpreter->Invoke() != kTfLiteOk)
-            printf("Failed to invoke interpreter!\n");
+            ESP_LOGE(TAG, "Failed to invoke interpreter!");
 
         // Print output
-        printf("Amplitude: %5.0f, Prediction: %.2f\n", amplitude, output->data.f[0]);
+        ESP_LOGI(TAG, "Amplitude: %5.0f, Prediction: %.2f", amplitude, output->data.f[0]);
     }
 }
 
 extern "C" void app_main(void)
 {
     setup();
-    while (true) {
+    while (true)
+    {
         loop();
     }
 }
