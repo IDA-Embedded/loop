@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
+#include "driver/gptimer.h"
 
 // Include TFLM
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
@@ -32,18 +33,33 @@ static tflite::MicroInterpreter *interpreter = nullptr;
 static uint8_t tensor_arena[TENSOR_ARENA_SIZE];
 static TfLiteTensor *input = nullptr;
 static TfLiteTensor *output = nullptr;
-static const char *TAG = "Inference";
+static const char *TAG_INF = "Inference";
+static const char *TAG_TIMER = "Timer";
+static gptimer_handle_t gptimer = NULL;
 
 /**
  * @brief Main setup function.
  */
 void setup(void)
 {
+
+    // Init General Purpose Timer
+    gptimer_config_t timer_config = {
+        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
+        .direction = GPTIMER_COUNT_UP,
+        .resolution_hz = 1000000, // 1MHz, 1 tick=1us
+    };
+
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+
+    // Enable timer
+    ESP_ERROR_CHECK(gptimer_enable(gptimer));
+
     // Load TFlite model
     model = tflite::GetModel(model_binary);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
-        ESP_LOGE(TAG, "Model schema mismatch!");
+        ESP_LOGE(TAG_INF, "Model schema mismatch!");
         abort();
     }
 
@@ -63,7 +79,7 @@ void setup(void)
     // Allocate memory for input and output tensors
     if (interpreter->AllocateTensors() != kTfLiteOk)
     {
-        ESP_LOGE(TAG, "Failed to allocate tensors!");
+        ESP_LOGE(TAG_INF, "Failed to allocate tensors!");
         abort();
     }
 
@@ -72,15 +88,15 @@ void setup(void)
     output = interpreter->output(0);
 
     // Print input and output tensor dimensions
-    ESP_LOGI(TAG, "Input tensor shape: %d, %d, %d", input->dims->data[0], input->dims->data[1], input->dims->data[2]);
-    ESP_LOGI(TAG, "Output tensor shape: %d\n", output->dims->data[0]);
+    ESP_LOGI(TAG_INF, "Input tensor shape: %d, %d, %d", input->dims->data[0], input->dims->data[1], input->dims->data[2]);
+    ESP_LOGI(TAG_INF, "Output tensor shape: %d\n", output->dims->data[0]);
     // Initialize audio with gain 16.0 (found experimentally)
     audio_init(16.0f, FRAME_STRIDE);
 
     // Initialize preprocessing
     if (!preprocess_init())
     {
-        ESP_LOGE(TAG, "Failed to initialize preprocessing!");
+        ESP_LOGE(TAG_INF, "Failed to initialize preprocessing!");
         abort();
     }
 }
@@ -92,6 +108,7 @@ void loop(void)
 {
     // Obtain audio frame
     float *audio_frame = audio_read();
+    uint64_t timer_count = 0;
 
     // Put and preprocess audio frame
     preprocess_put_audio(audio_frame);
@@ -100,12 +117,19 @@ void loop(void)
     float amplitude;
     if (preprocess_get_features(input->data.f, &amplitude))
     {
+        // Start timer
+        gptimer_start(gptimer);
         // Run inference
         if (interpreter->Invoke() != kTfLiteOk)
-            ESP_LOGE(TAG, "Failed to invoke interpreter!");
+            ESP_LOGE(TAG_INF, "Failed to invoke interpreter!");
+        // Stop timer
+        gptimer_stop(gptimer);
 
+        gptimer_get_raw_count(gptimer, &timer_count);
+        gptimer_set_raw_count(gptimer, 0);
         // Print output
-        ESP_LOGI(TAG, "Amplitude: %5.0f, Prediction: %.2f", amplitude, output->data.f[0]);
+        ESP_LOGI(TAG_INF, "Amplitude: %5.0f, Prediction: %.2f", amplitude, output->data.f[0]);
+        ESP_LOGI(TAG_TIMER, "Infernce time in ms: %llu", timer_count / 1000);
     }
 }
 
