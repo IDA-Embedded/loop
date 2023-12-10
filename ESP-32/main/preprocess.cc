@@ -1,15 +1,17 @@
 #include "preprocess.h"
 #include "signal/src/kiss_fft_wrappers/kiss_fft_float.h"
+#include "esp_log.h"
 
 static float feature_buffer[WINDOW_SIZE * SPECTRUM_SIZE];
-static float* feature_frame = feature_buffer;
+static float *feature_frame = feature_buffer;
 static kiss_fft_float::kiss_fftr_cfg kfft_cfg;
 static float max = 0.0;
+static const char *TAG = "Preprocess";
 
 /**
  * @brief Initialize preprocessing. Call this once before calling preprocess_put_audio() or
  * preprocess_get_features().
-*/
+ */
 bool preprocess_init()
 {
     // This code was taken from espressif__esp-tflite-micro/tensorflow/lite/experimental/microfrontend/lib/fft_util.cc.
@@ -18,20 +20,23 @@ bool preprocess_init()
     // Ask kissfft how much memory it wants
     size_t scratch_size = 0;
     kfft_cfg = kiss_fft_float::kiss_fftr_alloc(FRAME_SIZE, 0, nullptr, &scratch_size);
-    if (kfft_cfg != nullptr) {
-        fprintf(stderr, "Kiss memory sizing failed.\n");
+    if (kfft_cfg != nullptr)
+    {
+        ESP_LOGE(TAG, "Kiss memory sizing failed.");
         return 0;
     }
     void *scratch = malloc(scratch_size);
-    if (scratch == nullptr) {
-        fprintf(stderr, "Failed to alloc fft scratch buffer\n");
+    if (scratch == nullptr)
+    {
+        ESP_LOGE(TAG, "Failed to alloc fft scratch buffer");
         return 0;
     }
 
     // Let kissfft configure the scratch space we just allocated
     kfft_cfg = kiss_fft_float::kiss_fftr_alloc(FRAME_SIZE, 0, scratch, &scratch_size);
-    if (kfft_cfg != scratch) {
-        fprintf(stderr, "Kiss memory preallocation strategy failed.\n");
+    if (kfft_cfg != scratch)
+    {
+        ESP_LOGE(TAG, "Kiss memory preallocation strategy failed.");
         return 0;
     }
     return 1;
@@ -41,10 +46,10 @@ bool preprocess_init()
  * @brief Put an audio frame into the preprocessing pipeline. Call this once per audio frame.
  * Afterwards, call preprocess_get_features() to check if a complete preprocessed feature window
  * is ready for inference.
- * 
+ *
  * @param audio_frame Pointer to an array of FRAME_SIZE audio samples.
-*/
-void preprocess_put_audio(float* audio_frame)
+ */
+void preprocess_put_audio(float *audio_frame)
 {
     // This function applies the same preprocessing as the following Python code:
     // frame = frame - np.average(frame)
@@ -94,15 +99,15 @@ void preprocess_put_audio(float* audio_frame)
 /**
  * @brief Get features and amplitude. Call this once per audio frame. If it returns true, a full
  * window of features has been copied to the features array.
- * 
+ *
  * @param features  Pointer to a array of WINDOW_SIZE * SPECTRUM_SIZE floats.
  * @param amplitude Pointer to a float that will be filled with the amplitude of audio that
  *                  produced the feature window.
  * @return          True if features have been copied and are ready for inference, false otherwise.
  * @todo            This function does not respect stride and will not return overlapping windows.
  *                  Implement a circular buffer to fix this.
-*/
-bool preprocess_get_features(float* features, float* amplitude)
+ */
+bool preprocess_get_features(float *features, float *amplitude)
 {
     // If feature frame is not full, return false
     if (feature_frame != feature_buffer)
