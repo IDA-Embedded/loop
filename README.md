@@ -33,7 +33,7 @@ Training data should be placed in the `Data` folder. Each recording should provi
 
 ### Linux setup:
 
-> Python version 3.10 or newer is required
+> Python version 3.10 or 3.11 is required
 
 1. Install python environment: (Debian package manager in this example. Use yours)
     ```sh
@@ -53,6 +53,18 @@ Training data should be placed in the `Data` folder. Each recording should provi
     ```sh
         python3 main.py
     ```
+
+### Mac M setup
+
+> Python version 3.11 is required
+
+1. Same steps as Linux but replace the `requirements` file in step `3`.
+
+    ```sh
+        pip install --upgrade pip && pip install -r requirements_mac_m.txt
+    ```
+
+
 
 ## Getting started - ESP-32
 
