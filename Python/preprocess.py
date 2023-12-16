@@ -96,9 +96,9 @@ def preprocess_recording(wav_file: str, label_file: str):
 
     # Convert time range labels to window labels
     # We want to label windows that are completely within the time range of a label as positive,
-    # and all other windows as negative. Windows that overlap the start and end time are removed,
-    # since it's not clear what label they should have, in order to make the training data more
-    # consistent.
+    # and windows that are completely outside the time range as negative. Windows that overlap
+    # the start and end time are removed, since it's not clear what label they should have, and
+    # we don't want to train the model on ambiguous data.
     #
     # Example:
     # Label:              ************************
@@ -106,7 +106,8 @@ def preprocess_recording(wav_file: str, label_file: str):
     #              | Remove |   1   |   1   | Remove |   0   |
     y = np.zeros(len(windows))
     start_or_end_overlap = np.zeros(len(windows), dtype=bool)
-    windows_per_second = sample_rate / FRAME_STRIDE / WINDOW_STRIDE  # = 16000 / 256 / 4 = 15.625 Hz
+    window_period = WINDOW_STRIDE * FRAME_STRIDE / sample_rate  # = 4 * 256 / 16000 = 0.064s
+    windows_per_second = 1 / window_period  # = 15.625
     window_length = WINDOW_SIZE * FRAME_STRIDE / sample_rate  # = 24 * 256 / 16000 = 0.384s
     for index, label in labels.iterrows():
         # Compute index of start/end of label in windows
@@ -120,13 +121,13 @@ def preprocess_recording(wav_file: str, label_file: str):
 
         # Mark for removal all windows that overlap the start of a range label
         i = start_window - 1
-        while i >= 0 and (i * WINDOW_STRIDE + WINDOW_SIZE) * FRAME_STRIDE / sample_rate > label['start']:
+        while i >= 0 and i * window_period + window_length > label['start']:
             start_or_end_overlap[i] = True
             i -= 1
 
         # Mark for removal all windows that overlap the end of a range label
         i = end_window
-        while i < len(y) and i * WINDOW_STRIDE * FRAME_STRIDE / sample_rate < label['end']:
+        while i < len(y) and i * window_period < label['end']:
             start_or_end_overlap[i] = True
             i += 1
 
@@ -139,7 +140,7 @@ def preprocess_recording(wav_file: str, label_file: str):
     num_negatives = len(y) - num_positives
     if int(num_negatives / num_positives) >= 8:
         # Go through the data, and every time we see a negative window, we keep 1 out of ratio negative windows
-        # Ratio is chosen such that the data is balanced 2/1, which is acceptable while we're still not throwing
+        # Ratio is chosen such that the data is balanced 4/1, which is acceptable while we're still not throwing
         # away too much data. For example, if there are 50 negative windows for every positive window, then we
         # keep every 12th negative window.
         ratio = int(num_negatives / num_positives) // 4
