@@ -1,10 +1,13 @@
-def write_model_h_file(path: str, defines: dict):
+def write_model_h_file(path: str, defines: dict, declarations: list[str]):
     with open(path, 'w') as h_file:
         h_file.write('#ifndef MODEL_H\n')
         h_file.write('#define MODEL_H\n')
         h_file.write('\n')
         for key, value in defines.items():
             h_file.write(f'#define {key} {value}\n')
+        h_file.write('\n')
+        for declaration in declarations:
+            h_file.write(f'{declaration}\n')
         h_file.write('\n')
         h_file.write('extern const unsigned char model_binary[];\n')
         h_file.write('\n')

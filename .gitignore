@@ -10,5 +10,6 @@
 /Python/__pycache__
 /Python/utils/__pycache__
 /Python/*.tflite
+/Python/*.npy
 venv
 /Python/venv

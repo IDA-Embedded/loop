@@ -2,55 +2,55 @@ import os
 import keras
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Conv1D, Flatten
+from keras.layers import Dense, Conv1D, Flatten, MaxPooling1D, Dropout
 
 from utils.calc_mem import calc_mem
-from preprocess import preprocess, WINDOW_SIZE, SPECTRUM_SIZE, SPECTRUM_MEAN, SPECTRUM_STD, SAMPLE_RATE, FRAME_SIZE, FRAME_STRIDE
+from preprocess import preprocess_all, WINDOW_SIZE, SPECTRUM_SIZE, SPECTRUM_TOP, SPECTRUM_SRC, SPECTRUM_DST, SPECTRUM_MEAN, SPECTRUM_STD, SAMPLE_RATE, FRAME_SIZE, FRAME_STRIDE
 from utils.export_tflite import write_model_h_file, write_model_c_file
-from utils.plots import plot_dataset, plot_learning_curves, plot_convolution_filters, plot_first_positive_window, plot_predictions_vs_labels
+from utils.plots import plot_predictions_vs_labels, plot_learning_curves
 
 # Minimize TensorFlow logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
-# Load and preprocess data
-data_dir = '../Data/'
-x_files = []
-y_files = []
-for c_file in os.listdir('../Data/'):
-    if c_file.startswith('audio_') and c_file.endswith('.wav'):
-        recording_id = c_file[6:-4]
-        label_file = 'labels_' + recording_id + '.txt'
-        print('Preprocessing ' + c_file + ' and ' + label_file)
-        x_file, y_file = preprocess(data_dir + c_file, data_dir + label_file)
-        x_files.append(x_file)
-        y_files.append(y_file)
+# Preprocess data if not done already
+if not os.path.exists('x.npy') or not os.path.exists('y.npy'):
+    preprocess_all()
 
-# Concatenate files into feature and label arrays
-x = np.concatenate(x_files)  # Shape: (number of windows, WINDOW_SIZE, SPECTRUM_SIZE) = (number of windows, 32, 48)
-y = np.concatenate(y_files)  # Shape: (number of windows, 1)
+# Load preprocessed data
+x = np.load('x.npy')
+y = np.load('y.npy')
 
 # Plot the spectrogram of the entire dataset with labels underneath
-plot_dataset(x, y, block=True)
+# plot_dataset(x, y, block=True)
 
 # Split into training, validation and test sets
 x_train, x_val, x_test = np.split(x, [int(.6 * len(x)), int(.8 * len(x))])
 y_train, y_val, y_test = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
 
-# Determine class weights
+# Shuffle the training data
+indices = np.arange(len(x_train))
+np.random.shuffle(indices)
+x_train = x_train[indices]
+y_train = y_train[indices]
+
+# Determine negative to positive ratio
 num_positives = np.sum(y)
 num_negatives = len(y) - num_positives
 ratio = num_negatives / num_positives
-class_weights = {0: 1 / np.sqrt(ratio), 1: np.sqrt(ratio)}  # Divide by sqrt(ratio) to make losses comparable
-print('Class weights:', class_weights)
+print('Negative to positive ratio: ', ratio)
 
 # Build and compile model
 print('Building model...')
 model = Sequential()
-model.add(Conv1D(8, 3, activation='relu', input_shape=(WINDOW_SIZE, SPECTRUM_SIZE)))  # Output shape (30, 8)
-model.add(Conv1D(8, 3, activation='relu'))  # Output shape (28, 8)
-model.add(Flatten())  # Output shape (224,)
+model.add(Conv1D(8, 3, activation='relu', input_shape=(WINDOW_SIZE, SPECTRUM_DST[-1])))  # Output shape (14, 8)
+model.add(MaxPooling1D(2))  # Output shape (7, 8)
+model.add(Dropout(0.2))
+model.add(Conv1D(8, 3, activation='relu'))  # Output shape (5, 8)
+model.add(MaxPooling1D(2))  # Output shape (2, 8)
+model.add(Dropout(0.2))
+model.add(Flatten())  # Output shape (16)
 model.add(Dense(1, activation='sigmoid'))  # Output shape (1)
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
@@ -61,17 +61,17 @@ model.summary()
 print('Training model...')
 early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=16)
 model_checkpoint = keras.callbacks.ModelCheckpoint('model.h5', monitor='val_loss', save_best_only=True)
-model.fit(x_train, y_train, epochs=100, batch_size=128, validation_data=(x_val, y_val), class_weight=class_weights,
+model.fit(x_train, y_train, epochs=100, batch_size=128, validation_data=(x_val, y_val),
           callbacks=[early_stopping, model_checkpoint])
 
 # Plot learning curves
 plot_learning_curves(model, block=False)
 
 # Plot the first window that has a positive label
-plot_first_positive_window(x, y, block=False)
+# plot_first_positive_window(x, y, block=False)
 
 # Plot the 8 convolution filters of the first layer
-plot_convolution_filters(8, model.layers[0], block=False)
+# plot_convolution_filters(8, model.layers[0], block=False)
 
 # Load best model
 model = keras.models.load_model('model.h5')
@@ -108,14 +108,21 @@ tflite_model = converter.convert()
 
 # Export TensorFlow Lite model to C source files
 print('Exporting TensorFlow Lite model to C source files...')
-defines = {"SAMPLE_RATE": SAMPLE_RATE,
-           "FRAME_SIZE": FRAME_SIZE,
-           "FRAME_STRIDE": FRAME_STRIDE,
-           "WINDOW_SIZE": WINDOW_SIZE,
-           "SPECTRUM_SIZE": SPECTRUM_SIZE,
-           "SPECTRUM_MEAN": SPECTRUM_MEAN,
-           "SPECTRUM_STD": SPECTRUM_STD}
-write_model_h_file("../ESP-32/main/model.h", defines)
+defines = {
+    "SAMPLE_RATE": SAMPLE_RATE,
+    "FRAME_SIZE": FRAME_SIZE,
+    "FRAME_STRIDE": FRAME_STRIDE,
+    "WINDOW_SIZE": WINDOW_SIZE,
+    "SPECTRUM_TOP": SPECTRUM_TOP,
+    "SPECTRUM_SIZE": SPECTRUM_SIZE,
+    "SPECTRUM_MEAN": SPECTRUM_MEAN,
+    "SPECTRUM_STD": SPECTRUM_STD
+}
+declarations = [
+    "const unsigned long SPECTRUM_SRC[] = { " + ", ".join(map(str, SPECTRUM_SRC)) + " };",
+    "const unsigned long SPECTRUM_DST[] = { " + ", ".join(map(str, SPECTRUM_DST)) + " };"
+]
+write_model_h_file("../ESP-32/main/model.h", defines, declarations)
 write_model_c_file('../ESP-32/main/model.c', tflite_model)
 
 # Save TensorFlow Lite model and print memory

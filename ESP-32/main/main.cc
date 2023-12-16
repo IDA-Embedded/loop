@@ -71,10 +71,12 @@ void setup(void)
     }
 
     // Create an interpreter
-    static tflite::MicroMutableOpResolver<5> micro_op_resolver;
+    static tflite::MicroMutableOpResolver<6> micro_op_resolver;
     // Conv1D
     micro_op_resolver.AddReshape();
     micro_op_resolver.AddConv2D();
+    // MaxPool1D
+    micro_op_resolver.AddMaxPool2D();
     // Flatten
     micro_op_resolver.AddExpandDims();
     // Dense with sigmoid activation
