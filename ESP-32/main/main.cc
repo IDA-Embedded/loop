@@ -45,7 +45,6 @@ static const char *TAG_INF = "Inference";
  */
 void setup(void)
 {
-
     // Load TFlite model
     model = tflite::GetModel(MODEL_BINARY);
     if (model->version() != TFLITE_SCHEMA_VERSION)
@@ -55,10 +54,12 @@ void setup(void)
     }
 
     // Create an interpreter
-    static tflite::MicroMutableOpResolver<5> micro_op_resolver;
+    static tflite::MicroMutableOpResolver<6> micro_op_resolver;
     // Conv1D
     micro_op_resolver.AddReshape();
     micro_op_resolver.AddConv2D();
+    // MaxPool1D
+    micro_op_resolver.AddMaxPool2D();
     // Flatten
     micro_op_resolver.AddExpandDims();
     // Dense with sigmoid activation
@@ -108,7 +109,6 @@ void loop(void)
     float amplitude;
     if (preprocess_get_features(input->data.f, &amplitude))
     {
-
         // Run inference
         if (interpreter->Invoke() != kTfLiteOk)
             ESP_LOGE(TAG_INF, "Failed to invoke interpreter!");
