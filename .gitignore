@@ -12,3 +12,11 @@
 /Python/*.tflite
 venv
 /Python/venv
+/esp32_metric/build
+/esp32_metric/sdkconfig
+/esp32_metric/sdkconfig.ci
+/esp32_metric/sdkconfig.old
+/esp32_metric/managed_components
+.vscode
+/Python/.python-version
+/Python/x_test.npy

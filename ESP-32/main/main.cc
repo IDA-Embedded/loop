@@ -4,7 +4,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "driver/gptimer.h"
 
 // Include TFLM
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
@@ -15,11 +14,11 @@
 #include "audio.h"
 #include "preprocess.h"
 #ifdef MODEL_VERSION_1
-  #include "model_v1.h"
-  #define MODEL_BINARY model_v1_binary
+    #include "model_v1.h"
+    #define MODEL_BINARY model_v1_binary
 #else
-  #include "model.h"
-  #define MODEL_BINARY model_binary
+    #include "model.h"
+    #define MODEL_BINARY model_binary
 #endif
 
 // Compile time check preprocessor constants
@@ -40,27 +39,12 @@ static uint8_t tensor_arena[TENSOR_ARENA_SIZE];
 static TfLiteTensor *input = nullptr;
 static TfLiteTensor *output = nullptr;
 static const char *TAG_INF = "Inference";
-static gptimer_handle_t gptimer = NULL;
 
 /**
  * @brief Main setup function.
  */
 void setup(void)
 {
-    // Init General Purpose Timer
-    gptimer_config_t timer_config = {
-        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
-        .direction = GPTIMER_COUNT_UP,
-        .resolution_hz = 1000000, // 1MHz, 1 tick=1us
-        .flags = {
-            .intr_shared = 1,
-        }
-    };
-
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
-
-    // Enable timer
-    ESP_ERROR_CHECK(gptimer_enable(gptimer));
 
     // Load TFlite model
     model = tflite::GetModel(MODEL_BINARY);
@@ -116,7 +100,6 @@ void loop(void)
 {
     // Obtain audio frame
     float *audio_frame = audio_read();
-    uint64_t timer_count = 0;
 
     // Put and preprocess audio frame
     preprocess_put_audio(audio_frame);
@@ -125,18 +108,13 @@ void loop(void)
     float amplitude;
     if (preprocess_get_features(input->data.f, &amplitude))
     {
-        // Start timer
-        gptimer_start(gptimer);
+
         // Run inference
         if (interpreter->Invoke() != kTfLiteOk)
             ESP_LOGE(TAG_INF, "Failed to invoke interpreter!");
-        // Stop timer
-        gptimer_stop(gptimer);
 
-        gptimer_get_raw_count(gptimer, &timer_count);
-        gptimer_set_raw_count(gptimer, 0);
         // Print output
-        ESP_LOGI(TAG_INF, "Amplitude: %5.0f, Prediction: %.2f (inference time %llu ms)", amplitude, output->data.f[0], timer_count / 1000);
+        ESP_LOGI(TAG_INF, "Amplitude: %5.0f, Prediction: %.2f", amplitude, output->data.f[0]);
     }
 }
 
