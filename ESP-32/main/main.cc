@@ -14,7 +14,13 @@
 // Project includes
 #include "audio.h"
 #include "preprocess.h"
-#include "model.h"
+#ifdef MODEL_VERSION_1
+  #include "model_v1.h"
+  #define MODEL_BINARY model_v1_binary
+#else
+  #include "model.h"
+  #define MODEL_BINARY model_binary
+#endif
 
 // Compile time check preprocessor constants
 #if SAMPLE_RATE != AUDIO_SAMPLE_RATE
@@ -57,7 +63,7 @@ void setup(void)
     ESP_ERROR_CHECK(gptimer_enable(gptimer));
 
     // Load TFlite model
-    model = tflite::GetModel(model_binary);
+    model = tflite::GetModel(MODEL_BINARY);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         ESP_LOGE(TAG_INF, "Model schema mismatch!");
