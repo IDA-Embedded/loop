@@ -1,4 +1,4 @@
-menu "Project Settings"
+menu "Model selection"
 
     choice MODEL_VERSION
         prompt "Select Model Version"
@@ -12,6 +12,5 @@ menu "Project Settings"
         bool "2.0"
 
     endchoice
-
 
 endmenu

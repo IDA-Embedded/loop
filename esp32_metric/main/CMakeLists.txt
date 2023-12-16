@@ -1,6 +1,5 @@
 SET(METRIC_SOURCE
-    model_metric.cpp
-    test_data.c )
+    model_metric.cpp)
 
 
 idf_component_register(SRCS ${METRIC_SOURCE}

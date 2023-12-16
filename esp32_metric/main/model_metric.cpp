@@ -14,12 +14,15 @@
 #include "driver/gptimer.h"
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
-#include "test_data.h"
 
-#if defined(CONFIG_MODEL_VERSION_1_0)
+#ifdef CONFIG_MODEL_VERSION_1_0
+#pragma message("Using model version 1.0")
 #include "model_v1.h"
+#include "test_data.h"
 #elif defined(CONFIG_MODEL_VERSION_2_0)
+#pragma message("Using model version 2.0")
 #include "model_v2.h"
+#include "test_data2.h"
 #endif
 
 // DEFINES
@@ -44,7 +47,8 @@ void init_tflu(void)
         abort();
     }
 
-#if defined(CONFIG_MODEL_VERSION_1_0)
+#ifdef CONFIG_MODEL_VERSION_1_0
+    ESP_LOGI(TAG_M, "Model version 1.0");
     // Create ops resolver - Static or global. Consider during this differently if ever used in production environment.
     static tflite::MicroMutableOpResolver<5> micro_op_resolver;
     micro_op_resolver.AddReshape();
@@ -52,8 +56,8 @@ void init_tflu(void)
     micro_op_resolver.AddExpandDims();
     micro_op_resolver.AddFullyConnected();
     micro_op_resolver.AddLogistic();
-
-#elif defined(CONFIG_MODEL_VERSION_2_0)
+#elif CONFIG_MODEL_VERSION_2_0
+    ESP_LOGI(TAG_M, "Model version 2.0");
     static tflite::MicroMutableOpResolver<6> micro_op_resolver;
     micro_op_resolver.AddReshape();
     micro_op_resolver.AddConv2D();
@@ -82,14 +86,15 @@ void run_inference(void)
     // Get input and output tensors
     TfLiteTensor *input = interpreter->input(0);
 
-    // Determine input size
-    size_t total_elements = 1;
-    for (int i = 0; i < input->dims->size; ++i) {
-        total_elements *= input->dims->data[i];
-    }
+    // // Determine input size
+    // size_t total_elements = 1;
+    // for (int i = 0; i < input->dims->size; ++i)
+    // {
+    //     total_elements *= input->dims->data[i];
+    // }
     // Fill input tensor with data
-    ESP_LOGI(TAG_M, "Input tensor size: %u\n", total_elements);
-    for (int i = 0; i < g_x_test_test_data_size && i < total_elements; i++)
+    // && i < total_elements;
+    for (int i = 0; i < g_x_test_test_data_size; i++)
     {
         input->data.f[i] = g_x_test_test_data[i];
     }
@@ -142,6 +147,7 @@ extern "C" void app_main(void)
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
         .resolution_hz = 1000000, // 1MHz, 1 tick=1us
+        .intr_priority = 1,
         .flags = {
             .intr_shared = 1,
         }};
