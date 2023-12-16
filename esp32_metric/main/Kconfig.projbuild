@@ -1,0 +1,17 @@
+menu "Project Settings"
+
+    choice MODEL_VERSION
+        prompt "Select Model Version"
+        default MODEL_VERSION_1_0
+        help
+            Select the model to use for the project.
+
+    config MODEL_VERSION_1_0
+        bool "1.0"
+    config MODEL_VERSION_2_0
+        bool "2.0"
+
+    endchoice
+
+
+endmenu
