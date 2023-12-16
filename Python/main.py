@@ -44,7 +44,7 @@ print('Negative to positive ratio: ', ratio)
 # Build and compile model
 print('Building model...')
 model = Sequential()
-model.add(Conv1D(8, 3, activation='relu', input_shape=(WINDOW_SIZE, SPECTRUM_DST[-1])))  # Output shape (14, 8)
+model.add(Conv1D(8, 3, activation='relu', input_shape=(WINDOW_SIZE, SPECTRUM_SIZE)))  # Output shape (14, 8)
 model.add(MaxPooling1D(2))  # Output shape (7, 8)
 model.add(Dropout(0.2))
 model.add(Conv1D(8, 3, activation='relu'))  # Output shape (5, 8)
@@ -124,6 +124,8 @@ declarations = [
 ]
 write_model_h_file("../ESP-32/main/model.h", defines, declarations)
 write_model_c_file('../ESP-32/main/model.c', tflite_model)
+write_model_h_file("../esp32_metric/components/model_version_2/include/model_v2.h", defines, declarations)
+write_model_c_file('../esp32_metric/components/model_version_2/model_v2.c', tflite_model)
 
 # Save TensorFlow Lite model and print memory
 with open("model.tflite", "wb") as f:

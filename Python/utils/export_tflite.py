@@ -1,4 +1,11 @@
+import os
+
+
 def write_model_h_file(path: str, defines: dict, declarations: list[str]):
+    # Ensure that the folder exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    # Write header file
     with open(path, 'w') as h_file:
         h_file.write('#ifndef MODEL_H\n')
         h_file.write('#define MODEL_H\n')
@@ -15,6 +22,10 @@ def write_model_h_file(path: str, defines: dict, declarations: list[str]):
 
 
 def write_model_c_file(path: str, tflite_model):
+    # Ensure that the folder exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    # Write source file
     with open(path, 'w') as c_file:
         c_file.write('const unsigned char model_binary[] = {\n')
         for i, byte in enumerate(tflite_model):

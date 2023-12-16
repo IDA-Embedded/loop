@@ -54,8 +54,13 @@ void init_tflu(void)
     micro_op_resolver.AddLogistic();
 
 #elif defined(CONFIG_MODEL_VERSION_2_0)
-    // Need new model version here
-    bytes
+    static tflite::MicroMutableOpResolver<6> micro_op_resolver;
+    micro_op_resolver.AddReshape();
+    micro_op_resolver.AddConv2D();
+    micro_op_resolver.AddMaxPool2D();
+    micro_op_resolver.AddExpandDims();
+    micro_op_resolver.AddFullyConnected();
+    micro_op_resolver.AddLogistic();
 #endif
 
     // Create interpreter - Static or global. Consider during this differently if ever used in production environment.
@@ -77,8 +82,14 @@ void run_inference(void)
     // Get input and output tensors
     TfLiteTensor *input = interpreter->input(0);
 
+    // Determine input size
+    size_t total_elements = 1;
+    for (int i = 0; i < input->dims->size; ++i) {
+        total_elements *= input->dims->data[i];
+    }
     // Fill input tensor with data
-    for (int i = 0; i < g_x_test_test_data_size; i++)
+    ESP_LOGI(TAG_M, "Input tensor size: %u\n", total_elements);
+    for (int i = 0; i < g_x_test_test_data_size && i < total_elements; i++)
     {
         input->data.f[i] = g_x_test_test_data[i];
     }
