@@ -28,7 +28,6 @@ y = np.load('y.npy')
 # Split into training, validation and test sets
 x_train, x_val, x_test = np.split(x, [int(.6 * len(x)), int(.8 * len(x))])
 y_train, y_val, y_test = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
-np.save('x_train_v2.npy', x_train[1])
 
 # Shuffle the training data
 indices = np.arange(len(x_train))

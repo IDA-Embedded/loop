@@ -45,7 +45,6 @@ static const char *TAG_INF = "Inference";
  */
 void setup(void)
 {
-
     // Load TFlite model
     model = tflite::GetModel(MODEL_BINARY);
     if (model->version() != TFLITE_SCHEMA_VERSION)
@@ -110,7 +109,6 @@ void loop(void)
     float amplitude;
     if (preprocess_get_features(input->data.f, &amplitude))
     {
-
         // Run inference
         if (interpreter->Invoke() != kTfLiteOk)
             ESP_LOGE(TAG_INF, "Failed to invoke interpreter!");
