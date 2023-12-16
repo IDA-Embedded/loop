@@ -6,9 +6,8 @@
 
 // Static variables
 static float gain;
-static size_t stride;
 static i2s_chan_handle_t rx_handle;
-static int32_t circle_buffer[AUDIO_BUFFER_SAMPLES];
+static int32_t audio_buffer[AUDIO_BUFFER_SAMPLES];
 static float audio_frame[AUDIO_BUFFER_SAMPLES] = { 0.0 };
 static volatile bool audio_frame_ready = false;
 
@@ -20,23 +19,13 @@ static void audio_task(void *args);
  * audio_read().
  * 
  * @param gain   Gain to apply to audio samples. 1.0 is no gain.
- * @param stride Number of samples to stride between each audio frame. This must be a divisor of
- *               AUDIO_BUFFER_SAMPLES. Fo no overlap, set stride to AUDIO_BUFFER_SAMPLES.
 */
-void audio_init(float gain, size_t stride)
+void audio_init(float gain)
 {
     esp_err_t err;
 
-    // Check that stride is a divisor of AUDIO_BUFFER_SAMPLES
-    if (AUDIO_BUFFER_SAMPLES % stride != 0)
-    {
-        printf("Stride must be a divisor of AUDIO_BUFFER_SAMPLES!\n");
-        abort();
-    }
-
-    // Save gain and stride
+    // Save gain
     ::gain = gain;
-    ::stride = stride;
 
     // Allocate an I2S RX channel
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
@@ -72,8 +61,7 @@ void audio_init(float gain, size_t stride)
 }
 
 /**
- * @brief Read audio frame. This function blocks until an audio frame is ready. If stride is less
- * than AUDIO_BUFFER_SAMPLES, overlapping audio frames are returned.
+ * @brief Read audio frame. This function blocks until an audio frame is ready.
  * 
  * @return Pointer to audio frame buffer of size AUDIO_BUFFER_SAMPLES.
 */
@@ -91,23 +79,21 @@ float* audio_read()
 static void audio_task(void *args)
 {
     esp_err_t err;
-    size_t bytes_to_read = stride * sizeof(int32_t);
     size_t bytes_read;
-    size_t position = 0;
     size_t i;
 
     while (true)
     {
-        // Read audio data into circle buffer
-        err = i2s_channel_read(rx_handle, circle_buffer + position, bytes_to_read, &bytes_read, 1000);
+        // Read audio data into buffer
+        err = i2s_channel_read(rx_handle, audio_buffer, sizeof(audio_buffer), &bytes_read, 1000);
         ESP_ERROR_CHECK(err);
-        if (bytes_read != bytes_to_read)
-            printf("Read %d bytes instead of %d\n", bytes_read, bytes_to_read);
+        if (bytes_read != sizeof(audio_buffer))
+            printf("Read %d bytes instead of %d\n", bytes_read, sizeof(audio_buffer));
         
         // Convert to float audio frame in range [-32767,32767] and apply gain
         for (i = 0; i < AUDIO_BUFFER_SAMPLES; i++)
         {
-            float value = (float)(circle_buffer[(i + position) % AUDIO_BUFFER_SAMPLES] >> 8) * (gain / 256.0);
+            float value = (float)(audio_buffer[i] >> 8) * (gain / 256.0);
             if (fabs(value) > 32767.0)
                 value = 32767.0 * (value > 0.0 ? 1.0 : -1.0);
             audio_frame[i] = value;
@@ -115,9 +101,6 @@ static void audio_task(void *args)
 
         // Signal audio_read()
         audio_frame_ready = true;
-
-        // Update position
-        position = (position + stride) % AUDIO_BUFFER_SAMPLES;
     }
     vTaskDelete(NULL);
 }

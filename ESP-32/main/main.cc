@@ -14,7 +14,13 @@
 // Project includes
 #include "audio.h"
 #include "preprocess.h"
-#include "model.h"
+#ifdef MODEL_VERSION_1
+  #include "model_v1.h"
+  #define MODEL_BINARY model_v1_binary
+#else
+  #include "model.h"
+  #define MODEL_BINARY model_binary
+#endif
 
 // Compile time check preprocessor constants
 #if SAMPLE_RATE != AUDIO_SAMPLE_RATE
@@ -34,7 +40,6 @@ static uint8_t tensor_arena[TENSOR_ARENA_SIZE];
 static TfLiteTensor *input = nullptr;
 static TfLiteTensor *output = nullptr;
 static const char *TAG_INF = "Inference";
-static const char *TAG_TIMER = "Timer";
 static gptimer_handle_t gptimer = NULL;
 
 /**
@@ -42,12 +47,14 @@ static gptimer_handle_t gptimer = NULL;
  */
 void setup(void)
 {
-
     // Init General Purpose Timer
     gptimer_config_t timer_config = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
         .resolution_hz = 1000000, // 1MHz, 1 tick=1us
+        .flags = {
+            .intr_shared = 1,
+        }
     };
 
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
@@ -56,7 +63,7 @@ void setup(void)
     ESP_ERROR_CHECK(gptimer_enable(gptimer));
 
     // Load TFlite model
-    model = tflite::GetModel(model_binary);
+    model = tflite::GetModel(MODEL_BINARY);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         ESP_LOGE(TAG_INF, "Model schema mismatch!");
@@ -90,8 +97,9 @@ void setup(void)
     // Print input and output tensor dimensions
     ESP_LOGI(TAG_INF, "Input tensor shape: %d, %d, %d", input->dims->data[0], input->dims->data[1], input->dims->data[2]);
     ESP_LOGI(TAG_INF, "Output tensor shape: %d\n", output->dims->data[0]);
+
     // Initialize audio with gain 16.0 (found experimentally)
-    audio_init(16.0f, FRAME_STRIDE);
+    audio_init(16.0f);
 
     // Initialize preprocessing
     if (!preprocess_init())
@@ -128,8 +136,7 @@ void loop(void)
         gptimer_get_raw_count(gptimer, &timer_count);
         gptimer_set_raw_count(gptimer, 0);
         // Print output
-        ESP_LOGI(TAG_INF, "Amplitude: %5.0f, Prediction: %.2f", amplitude, output->data.f[0]);
-        ESP_LOGI(TAG_TIMER, "Infernce time in ms: %llu", timer_count / 1000);
+        ESP_LOGI(TAG_INF, "Amplitude: %5.0f, Prediction: %.2f (inference time %llu ms)", amplitude, output->data.f[0], timer_count / 1000);
     }
 }
 
