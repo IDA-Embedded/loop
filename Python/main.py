@@ -4,8 +4,8 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Conv1D, Flatten, MaxPooling1D, Dropout
 
-from utils.calc_mem import calc_mem
 from preprocess import preprocess_all, WINDOW_SIZE, SPECTRUM_SIZE, SPECTRUM_TOP, SPECTRUM_SRC, SPECTRUM_DST, SPECTRUM_MEAN, SPECTRUM_STD, SAMPLE_RATE, FRAME_SIZE, FRAME_STRIDE
+from utils.calc_mem import calc_mem
 from utils.export_tflite import write_model_h_file, write_model_c_file
 from utils.plots import plot_predictions_vs_labels, plot_learning_curves
 
@@ -16,7 +16,7 @@ tf.get_logger().setLevel('ERROR')
 
 # Preprocess data if not done already
 if not os.path.exists('x.npy') or not os.path.exists('y.npy'):
-    preprocess_all()
+    preprocess_all('../Data/')
 
 # Load preprocessed data
 x = np.load('x.npy')
@@ -44,24 +44,24 @@ print('Negative to positive ratio: ', ratio)
 # Build and compile model
 print('Building model...')
 model = Sequential()
-model.add(Conv1D(8, 3, activation='relu', input_shape=(WINDOW_SIZE, SPECTRUM_SIZE)))  # Output shape (14, 8)
-model.add(MaxPooling1D(2))  # Output shape (7, 8)
+model.add(Conv1D(8, 3, activation='relu', input_shape=(WINDOW_SIZE, SPECTRUM_SIZE)))  # Output shape (22, 8)
+model.add(MaxPooling1D(2))  # Output shape (11, 8)
 model.add(Dropout(0.2))
-model.add(Conv1D(8, 3, activation='relu'))  # Output shape (5, 8)
-model.add(MaxPooling1D(2))  # Output shape (2, 8)
+model.add(Conv1D(8, 3, activation='relu'))  # Output shape (9, 8)
+model.add(MaxPooling1D(2))  # Output shape (4, 8)
 model.add(Dropout(0.2))
-model.add(Flatten())  # Output shape (16)
+model.add(Flatten())  # Output shape (32)
 model.add(Dense(1, activation='sigmoid'))  # Output shape (1)
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.002), loss='binary_crossentropy', metrics=['accuracy'])
 
 # Print model summary
 model.summary()
 
-# Train model with early stopping and class weights; save best model
+# Train model with early stopping; save best model
 print('Training model...')
 early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=16)
 model_checkpoint = keras.callbacks.ModelCheckpoint('model.h5', monitor='val_loss', save_best_only=True)
-model.fit(x_train, y_train, epochs=100, batch_size=128, validation_data=(x_val, y_val),
+model.fit(x_train, y_train, epochs=100, batch_size=64, validation_data=(x_val, y_val),
           callbacks=[early_stopping, model_checkpoint])
 
 # Plot learning curves

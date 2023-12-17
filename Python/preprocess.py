@@ -43,23 +43,40 @@ SPECTRUM_MEAN = 9.0
 SPECTRUM_STD = 1.2
 
 
-def reduce_spectrum(spectral_frame: np.ndarray) -> np.ndarray:
-    # The incoming spectral frame has 256 bins. We want to keep only the lowest 67 bins,
-    # corresponding to everything below 4188 Hz. Moreover, to reduce dimensionality further,
-    # we collapse some bins by computing their average into single bins, because they don't
-    # contain any bell frequencies, so we don't want to learn any patterns from them.
-    reduced_spectrum = np.zeros(SPECTRUM_SIZE)
-    for i in range(0, len(SPECTRUM_SRC) - 1, 2):
-        # Average the bins that we want to reduce
-        reduced_spectrum[SPECTRUM_DST[i]] = np.average(spectral_frame[SPECTRUM_SRC[i]:SPECTRUM_SRC[i + 1]])
+def preprocess_all(data_dir: str):
+    # Load and preprocess all recordings in the data folder
+    x_files = []
+    y_files = []
+    for c_file in os.listdir('../Data/'):
+        if c_file.startswith('audio_') and c_file.endswith('.wav'):
+            recording_id = c_file[6:-4]
+            label_file = 'labels_' + recording_id + '.txt'
+            print('Preprocessing ' + c_file + ' and ' + label_file)
+            x_file, y_file = _preprocess_recording(data_dir + c_file, data_dir + label_file)
+            x_files.append(x_file)
+            y_files.append(y_file)
 
-        # Copy the bins that we want to keep
-        reduced_spectrum[SPECTRUM_DST[i + 1]:SPECTRUM_DST[i + 2]] = spectral_frame[SPECTRUM_SRC[i + 1]:SPECTRUM_SRC[i + 2]]
+    # Shuffle files so we get a mix of different recordings in training, validation and test sets
+    # Use fixed seed to get reproducible results
+    np.random.seed(5)
+    indices = np.arange(len(x_files))
+    np.random.shuffle(indices)
+    x_files_shuffled = []
+    y_files_shuffled = []
+    for i in indices:
+        x_files_shuffled.append(x_files[i])
+        y_files_shuffled.append(y_files[i])
 
-    return reduced_spectrum
+    # Concatenate files into feature and label arrays
+    x = np.concatenate(x_files_shuffled)  # Shape: (number of windows, WINDOW_SIZE, SPECTRUM_SIZE) = (number of windows, 24, 28)
+    y = np.concatenate(y_files_shuffled)  # Shape: (number of windows, 1)
+
+    # Save to files
+    np.save('x.npy', x)
+    np.save('y.npy', y)
 
 
-def preprocess_recording(wav_file: str, label_file: str):
+def _preprocess_recording(wav_file: str, label_file: str):
     # Load wav file
     sample_rate, sound_data = wavfile.read(wav_file)
     if sample_rate != SAMPLE_RATE:
@@ -72,7 +89,7 @@ def preprocess_recording(wav_file: str, label_file: str):
         frame = frame - np.average(frame)
         frame = frame * np.hamming(FRAME_SIZE)
         spectral_frame = np.abs(np.fft.rfft(frame))
-        spectral_frame = reduce_spectrum(spectral_frame)
+        spectral_frame = _reduce_spectrum(spectral_frame)
         spectral_frame = np.log1p(np.abs(spectral_frame))
         spectral_frames.append(spectral_frame)
 
@@ -159,39 +176,21 @@ def preprocess_recording(wav_file: str, label_file: str):
     return x, y
 
 
-def preprocess_all():
-    # Load and preprocess all recordings in the data folder
-    data_dir = '../Data/'
-    x_files = []
-    y_files = []
-    for c_file in os.listdir('../Data/'):
-        if c_file.startswith('audio_') and c_file.endswith('.wav'):
-            recording_id = c_file[6:-4]
-            label_file = 'labels_' + recording_id + '.txt'
-            print('Preprocessing ' + c_file + ' and ' + label_file)
-            x_file, y_file = preprocess_recording(data_dir + c_file, data_dir + label_file)
-            x_files.append(x_file)
-            y_files.append(y_file)
+def _reduce_spectrum(spectral_frame: np.ndarray) -> np.ndarray:
+    # The incoming spectral frame has 256 bins. We want to keep only the lowest 67 bins,
+    # corresponding to everything below 4188 Hz. Moreover, to reduce dimensionality further,
+    # we collapse some bins by computing their average into single bins, because they don't
+    # contain any bell frequencies, so we don't want to learn any patterns from them.
+    reduced_spectrum = np.zeros(SPECTRUM_SIZE)
+    for i in range(0, len(SPECTRUM_SRC) - 1, 2):
+        # Average the bins that we want to reduce
+        reduced_spectrum[SPECTRUM_DST[i]] = np.average(spectral_frame[SPECTRUM_SRC[i]:SPECTRUM_SRC[i + 1]])
 
-    # Shuffle files so we get a mix of different recordings in training, validation and test sets
-    # Use fixed seed to get reproducible results
-    np.random.seed(5)
-    indices = np.arange(len(x_files))
-    np.random.shuffle(indices)
-    x_files_shuffled = []
-    y_files_shuffled = []
-    for i in indices:
-        x_files_shuffled.append(x_files[i])
-        y_files_shuffled.append(y_files[i])
+        # Copy the bins that we want to keep
+        reduced_spectrum[SPECTRUM_DST[i + 1]:SPECTRUM_DST[i + 2]] = spectral_frame[SPECTRUM_SRC[i + 1]:SPECTRUM_SRC[i + 2]]
 
-    # Concatenate files into feature and label arrays
-    x = np.concatenate(x_files_shuffled)  # Shape: (number of windows, WINDOW_SIZE, SPECTRUM_SIZE) = (number of windows, 24, 28)
-    y = np.concatenate(y_files_shuffled)  # Shape: (number of windows, 1)
-
-    # Save to files
-    np.save('x.npy', x)
-    np.save('y.npy', y)
+    return reduced_spectrum
 
 
 if __name__ == '__main__':
-    preprocess_all()
+    preprocess_all('../Data/')
