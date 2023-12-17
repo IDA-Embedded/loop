@@ -91,3 +91,34 @@ def plot_predictions_vs_labels(y_pred: np.ndarray, y_test: np.ndarray, block: bo
     plt.ylabel('Prediction')
     plt.legend(['Prediction', 'Label'])
     plt.show(block=block)
+
+
+def plot_hyperparameter_tuning_results(title: str, average_grid: np.ndarray, dropout_rates: list, num_filters: list, kernel_sizes: list, block: bool):
+    # Parameters:
+    # average_grid: np.ndarray
+    #     3-dimensional array with average validation losses for each combination of dropout rate, num filters and kernel size
+    # block: bool
+    #     Whether to block the program until the plot is closed
+
+    # Plot all averages as heatmap subplots, where each heatmap shows num_filters vs kernel_size for a specific dropout_rate
+    plt.figure(figsize=(12, 4))
+    for dropout_rate_index in range(len(dropout_rates)):
+        plt.subplot(1, len(dropout_rates), dropout_rate_index + 1)
+        # Plot heatmap; use green for 0.0 (min) and red for 0.005 (max)
+        plt.imshow(0.005 - average_grid[dropout_rate_index, :, :], cmap='RdYlGn', vmin=0.0, vmax=0.005)
+        # Write the value in each cell
+        for j in range(len(num_filters)):
+            for k in range(len(kernel_sizes)):
+                plt.text(k, j, '{0:.6f}'.format(average_grid[dropout_rate_index, j, k]), ha='center', va='center', color='black')
+        # Set labels and ticks
+        plt.title('Dropout rate ' + str(dropout_rates[dropout_rate_index]))
+        plt.xlabel('Kernel size')
+        plt.ylabel('Number of filters')
+        plt.xticks(range(len(kernel_sizes)), [str(x) for x in kernel_sizes])
+        plt.yticks(range(len(num_filters)), [str(x) for x in num_filters])
+
+    # Set title
+    plt.suptitle(title)
+
+    # Show plot
+    plt.show(block=block)
