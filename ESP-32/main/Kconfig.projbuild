@@ -1,0 +1,20 @@
+menu "Loop config"
+    config NUM_NEOPIXEL_IN_LOOP
+        int  "Number of Neopixels in loop"
+        default 120
+        help
+            Number of Neopixels in visual loop.
+    
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "loop_gw"
+        help
+            SSID of local back channel.
+     
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default "12341234"
+        help
+            WiFi password (WPA or WPA2) for the networks.
+endmenu
