@@ -16,6 +16,9 @@ Training data should be placed in the `Data` folder. Each recording should provi
 * A .wav file with 16 bit mono audio in 16 kHz. Its file name should be `audio_`*\<id\>*`.wav`, where *\<id\>* can be any unique string that identifies the recording.
 * A .txt file with labels indicating the starting and ending times of each bell sound in the recording. Each row contains a starting time in seconds, the ending time in seconds and a label name, separated by a tab character. This conforms to Audacity's label file format. Its file name should be `label_`*\<id\>*`.txt`, where *\<id\>* is the recording identifier.
 
+## More raw data
+Raw recordings from Loop fitness can be found here : https://anyvej11.dk/loop  
+
 ## Workshop slides
 
 * Workshop 1, pt1: https://docs.google.com/presentation/d/1IYGDZZqRrE4ZvU1GUY1HpiN73ZtuhXn9buOHMAe0r3Y
