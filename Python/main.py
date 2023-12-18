@@ -22,7 +22,7 @@ from utils.export_tflite import write_model_h_file, write_model_c_file
 from utils.plots import plot_predictions_vs_labels, plot_learning_curves
 
 # Enable Quantization
-ENABLE_QUANTIZATION = False
+ENABLE_QUANTIZATION = True
 
 # Set file names depending on quantization
 if ENABLE_QUANTIZATION:
@@ -39,10 +39,7 @@ def representative_dataset():
 
 # Minimize TensorFlow logging
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
-
-tf.get_logger().setLevel("ERROR")
 
 tf.get_logger().setLevel("ERROR")
 
@@ -76,10 +73,8 @@ num_positives = np.sum(y)
 num_negatives = len(y) - num_positives
 ratio = num_negatives / num_positives
 print("Negative to positive ratio: ", ratio)
-print("Negative to positive ratio: ", ratio)
 
 # Build and compile model
-print("Building model...")
 print("Building model...")
 model = Sequential()
 model.add(
@@ -162,16 +157,7 @@ print("False negatives:    ", int(confusion_matrix[1, 0]))
 plot_predictions_vs_labels(y_pred, y_test, block=True)
 # Convert to TensorFlow Lite model
 print("Converting to TensorFlow Lite model...")
-print("Converting to TensorFlow Lite model...")
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
-if ENABLE_QUANTIZATION:
-    print("Quantizing TensorFlow Lite model...")
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    converter.representative_dataset = representative_dataset
-    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-    converter.inference_input_type = tf.int8
-    converter.inference_output_type = tf.int8  # or tf.int8
-
 if ENABLE_QUANTIZATION:
     print("Quantizing TensorFlow Lite model...")
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
@@ -183,7 +169,6 @@ if ENABLE_QUANTIZATION:
 tflite_model = converter.convert()
 
 # Export TensorFlow Lite model to C source files
-print("Exporting TensorFlow Lite model to C source files...")
 print("Exporting TensorFlow Lite model to C source files...")
 defines = {
     "SAMPLE_RATE": SAMPLE_RATE,
@@ -223,22 +208,9 @@ write_model_h_file(
 )
 write_model_c_file(f"../esp32_metric/components/models/{FILE_NAME}_v2.c", tflite_model)
 
-# Do not inlcude quantized model into the main project
-if not ENABLE_QUANTIZATION:
-    write_model_h_file("../ESP-32/main/model.h", defines, declarations)
-    write_model_c_file("../ESP-32/main/model.c", tflite_model)
-
-write_model_h_file(
-    f"../esp32_metric/components/models/include_v2/{'model_v2_quan' if ENABLE_QUANTIZATION else 'model_v2'}/{FILE_NAME}_v2.h",
-    defines,
-    declarations,
-)
-write_model_c_file(f"../esp32_metric/components/models/{FILE_NAME}_v2.c", tflite_model)
-
 # Save TensorFlow Lite model and print memory
 with open(f"gen/{FILE_NAME}.tflite", "wb") as f:
     f.write(tflite_model)
 calc_mem(f"gen/{FILE_NAME}.tflite")
 
-print("Done.")
 print("Done.")
