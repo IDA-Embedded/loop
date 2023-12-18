@@ -9,25 +9,13 @@ from utils.calc_mem import calc_mem
 from utils.export_tflite import write_model_h_file, write_model_c_file
 from utils.plots import plot_predictions_vs_labels, plot_learning_curves
 
-# Enable Quantization
+# Enable quantization
 ENABLE_QUANTIZATION = True
-
-# Set file names depending on quantization
-if ENABLE_QUANTIZATION:
-    FILE_NAME = "model_quantized"
-else:
-    FILE_NAME = "model"
-
-
-def representative_dataset():
-    global x_test
-    x_test_samples = x_test[np.random.choice(x_test.shape[0], 100, replace=False)]
-    yield [x_test_samples.astype(np.float32)]
-
 
 # Minimize TensorFlow logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
+
 tf.get_logger().setLevel('ERROR')
 
 # Preprocess data if not done already
@@ -118,13 +106,21 @@ print('True negatives:     ', int(confusion_matrix[0, 0]))
 print('False positives:    ', int(confusion_matrix[0, 1]))
 print('False negatives:    ', int(confusion_matrix[1, 0]))
 
-
 # Plot predictions vs labels
 plot_predictions_vs_labels(y_pred, y_test, block=True)
+
 # Convert to TensorFlow Lite model
-print("Converting to TensorFlow Lite model...")
+print('Converting to TensorFlow Lite model...')
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 if ENABLE_QUANTIZATION:
+    # Function for generating representative data
+    def representative_dataset():
+        global x_test
+        x_test_samples = x_test[np.random.choice(x_test.shape[0], 100, replace=False)]
+        yield [x_test_samples.astype(np.float32)]
+
+
+    # Quantize model
     print("Quantizing TensorFlow Lite model...")
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     converter.representative_dataset = representative_dataset
@@ -146,23 +142,21 @@ defines = {
     "SPECTRUM_MEAN": SPECTRUM_MEAN,
     "SPECTRUM_STD": SPECTRUM_STD
 }
-
-
 declarations = [
     "const unsigned long SPECTRUM_SRC[] = { " + ", ".join(map(str, SPECTRUM_SRC)) + " };",
     "const unsigned long SPECTRUM_DST[] = { " + ", ".join(map(str, SPECTRUM_DST)) + " };"
 ]
-# Do not inlcude quantized model into the main project
-if not ENABLE_QUANTIZATION:
+if ENABLE_QUANTIZATION:
+    FILE_NAME = "model_quantized"
+    # Do not include quantized model into the main project
+    write_model_h_file(f"../esp32_metric/components/models/include_v2/'model_v2_quan'/{FILE_NAME}_v2.h", defines, declarations)
+    write_model_c_file(f"../esp32_metric/components/models/{FILE_NAME}_v2.c", tflite_model)
+else:
+    FILE_NAME = "model"
     write_model_h_file("../ESP-32/main/model.h", defines, declarations)
     write_model_c_file("../ESP-32/main/model.c", tflite_model)
-
-write_model_h_file(
-    f"../esp32_metric/components/models/include_v2/{'model_v2_quan' if ENABLE_QUANTIZATION else 'model_v2'}/{FILE_NAME}_v2.h",
-    defines,
-    declarations,
-)
-write_model_c_file(f"../esp32_metric/components/models/{FILE_NAME}_v2.c", tflite_model)
+    write_model_h_file(f"../esp32_metric/components/models/include_v2/'model_v2'/{FILE_NAME}_v2.h", defines, declarations)
+    write_model_c_file(f"../esp32_metric/components/models/{FILE_NAME}_v2.c", tflite_model)
 
 # Save TensorFlow Lite model and print memory
 with open(f"gen/{FILE_NAME}.tflite", "wb") as f:
