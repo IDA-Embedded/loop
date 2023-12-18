@@ -10,7 +10,7 @@ from utils.export_tflite import write_model_h_file, write_model_c_file
 from utils.plots import plot_predictions_vs_labels, plot_learning_curves
 
 # Enable quantization
-ENABLE_QUANTIZATION = True
+ENABLE_QUANTIZATION = False
 
 # Minimize TensorFlow logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -115,10 +115,9 @@ converter = tf.lite.TFLiteConverter.from_keras_model(model)
 if ENABLE_QUANTIZATION:
     # Function for generating representative data
     def representative_dataset():
-        global x_test
-        x_test_samples = x_test[np.random.choice(x_test.shape[0], 100, replace=False)]
-        yield [x_test_samples.astype(np.float32)]
-
+        global x_train
+        x_train_samples = x_train[np.random.choice(x_train.shape[0], 5000, replace=False)]
+        yield [x_train_samples.astype(np.float32)]
 
     # Quantize model
     print("Quantizing TensorFlow Lite model...")
