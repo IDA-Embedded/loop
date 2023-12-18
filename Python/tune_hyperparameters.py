@@ -100,12 +100,12 @@ def _train(x_train, y_train, x_val, y_val, dropout_rate, num_filters, filter_len
 
     # Train model with early stopping and class weights; save best model
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=8)
-    model_checkpoint = keras.callbacks.ModelCheckpoint('model.h5', monitor='val_loss', save_best_only=True)
+    model_checkpoint = keras.callbacks.ModelCheckpoint('gen/model.h5', monitor='val_loss', save_best_only=True)
     model.fit(x_train, y_train, epochs=100, batch_size=batch_size, validation_data=(x_val, y_val),
               callbacks=[early_stopping, model_checkpoint], verbose=0)
 
     # Load best model
-    model = keras.models.load_model('model.h5')
+    model = keras.models.load_model('gen/model.h5')
 
     # Evaluate model on validation and test sets
     return model.evaluate(x_val, y_val, verbose=0)
