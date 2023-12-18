@@ -26,6 +26,7 @@ Raw recordings from Loop fitness can be found here : https://anyvej11.dk/loop
 * Workshop 2: https://docs.google.com/presentation/d/1cRfUvB82cQw7qil6pJezRVyu-Q3wIUR1_X0M9sBXE_U
 * Workshop 3, pt1: https://docs.google.com/presentation/d/1JoLjX3rePVxhLUhv33q94o3sm2obSHIeEd-6BmAlmUA
 * Workshop 3, pt2: https://docs.google.com/presentation/d/e/2PACX-1vQSEskWAp7qakSjyGhIgF6iSSweX-2eQtBJbIA1a7KJkjtK_I6owz_Y1vjZUSEVK18cLWoZSUAUCjEt/pub?
+* Workshop 3, pt3: https://docs.google.com/presentation/d/1u-gXyeAKtL2nef_diZLR5ulNL9ifhgIZVbEZjKQID7E/pub
 
 ## Getting started - Python and TensorFlow
 
