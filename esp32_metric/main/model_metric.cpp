@@ -18,9 +18,12 @@
 #ifdef CONFIG_MODEL_VERSION_1_0
 #include "model_v1.h"
 #include "test_data.h"
-#elif defined(CONFIG_MODEL_VERSION_2_0)
+#elif defined(CONFIG_MODEL_VERSION_2_0) && !defined(CONFIG_USE_QUANTIZED_MODEL)
 #include "model_v2.h"
 #include "test_data2.h"
+#else
+#include "model_quantized_v2.h"
+#include "test_quantized.h"
 #endif
 
 // DEFINES
@@ -85,7 +88,11 @@ void run_inference(void)
 
     for (int i = 0; i < g_x_test_test_data_size; i++)
     {
+#ifndef CONFIG_USE_QUANTIZED_MODEL
         input->data.f[i] = g_x_test_test_data[i];
+#else
+        input->data.uint8[i] = g_x_test_test_data[i];
+#endif
     }
 
     for (int i = 0; i < 10; i++)

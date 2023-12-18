@@ -13,4 +13,10 @@ menu "Model selection"
 
     endchoice
 
+    if MODEL_VERSION_2_0
+        config USE_QUANTIZED_MODEL
+            bool "Use quantized model"
+
+    endif
+
 endmenu

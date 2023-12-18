@@ -22,4 +22,6 @@ venv
 .vscode
 /Python/.python-version
 /esp32_metric/components/models/model_v2.c
-/esp32_metric/components/models/include_v2/model_v2.h
+/esp32_metric/components/models/include_v2/model_v2/model_v2.h
+/esp32_metric/components/models/include_v2/model_v2_quan/model_quantized_v2.h
+/esp32_metric/components/models/model_quantized_v2.c
