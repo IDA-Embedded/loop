@@ -23,10 +23,10 @@ Training data should be placed in the `Data` folder. Each recording should provi
 * Workshop 2: https://docs.google.com/presentation/d/1cRfUvB82cQw7qil6pJezRVyu-Q3wIUR1_X0M9sBXE_U
 * Workshop 3, pt1:
 * Workshop 3, pt2: https://docs.google.com/presentation/d/e/2PACX-1vQSEskWAp7qakSjyGhIgF6iSSweX-2eQtBJbIA1a7KJkjtK_I6owz_Y1vjZUSEVK18cLWoZSUAUCjEt/pub?
+
 ## Getting started - Python and TensorFlow
 
 * It's generally recommended to use python virtual environments when working with different python projects to handle dependencies/packages.
-
 
 [Python documentation](https://docs.python.org/3.10/library/venv.html)
 

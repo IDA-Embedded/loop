@@ -11,6 +11,9 @@
 /Python/utils/__pycache__
 /Python/*.tflite
 /Python/*.npy
+/Python/gen/*.h5
+/Python/gen/*.tflite
+/Python/gen/*.npy
 venv
 /Python/venv
 /esp32_metric/build

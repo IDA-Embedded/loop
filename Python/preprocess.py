@@ -57,23 +57,29 @@ def preprocess_all(data_dir: str):
             y_files.append(y_file)
 
     # Shuffle files so we get a mix of different recordings in training, validation and test sets
-    # Use fixed seed to get reproducible results
-    np.random.seed(5)
-    indices = np.arange(len(x_files))
-    np.random.shuffle(indices)
+    # Since we will split the data into 60%, 20% and 20%, we want to shuffle the files such that
+    # every fifth part of the entire sequence contains a mix of different recordings. Also we don't
+    # want to shuffle randomly, because we want to reproduce the same shuffle every time, so
+    # training results are comparable.
+    # For example:
+    # 10 recordings => [ 0, 5 | 1, 6 | 2, 7 | 3, 8 | 4, 9 ]
+    # 13 recordings => [ 0, 5, 10 | 1, 6, 11 | 2, 7, 12 | 3,  8 | 4,  9 ]
     x_files_shuffled = []
     y_files_shuffled = []
-    for i in indices:
-        x_files_shuffled.append(x_files[i])
-        y_files_shuffled.append(y_files[i])
+    for i in range(5):
+        for j in range(ceil(len(x_files) / 5)):
+            if j * 5 + i < len(x_files):
+                x_files_shuffled.append(x_files[j * 5 + i])
+                y_files_shuffled.append(y_files[j * 5 + i])
 
     # Concatenate files into feature and label arrays
     x = np.concatenate(x_files_shuffled)  # Shape: (number of windows, WINDOW_SIZE, SPECTRUM_SIZE) = (number of windows, 24, 28)
     y = np.concatenate(y_files_shuffled)  # Shape: (number of windows, 1)
 
     # Save to files
-    np.save('x.npy', x)
-    np.save('y.npy', y)
+    os.makedirs('gen/', exist_ok=True)
+    np.save('gen/x.npy', x)
+    np.save('gen/y.npy', y)
 
 
 def _preprocess_recording(wav_file: str, label_file: str):

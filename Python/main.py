@@ -15,12 +15,12 @@ import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
 # Preprocess data if not done already
-if not os.path.exists('x.npy') or not os.path.exists('y.npy'):
+if not os.path.exists('gen/x.npy') or not os.path.exists('gen/y.npy'):
     preprocess_all('../Data/')
 
 # Load preprocessed data
-x = np.load('x.npy')
-y = np.load('y.npy')
+x = np.load('gen/x.npy')
+y = np.load('gen/y.npy')
 
 # Plot the spectrogram of the entire dataset with labels underneath
 # plot_dataset(x, y, block=True)
@@ -52,7 +52,7 @@ model.add(MaxPooling1D(2))  # Output shape (4, 8)
 model.add(Dropout(0.2))
 model.add(Flatten())  # Output shape (32)
 model.add(Dense(1, activation='sigmoid'))  # Output shape (1)
-model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.002), loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy'])
 
 # Print model summary
 model.summary()
@@ -60,7 +60,7 @@ model.summary()
 # Train model with early stopping; save best model
 print('Training model...')
 early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=16)
-model_checkpoint = keras.callbacks.ModelCheckpoint('model.h5', monitor='val_loss', save_best_only=True)
+model_checkpoint = keras.callbacks.ModelCheckpoint('gen/model.h5', monitor='val_loss', save_best_only=True)
 model.fit(x_train, y_train, epochs=100, batch_size=64, validation_data=(x_val, y_val),
           callbacks=[early_stopping, model_checkpoint])
 
@@ -74,7 +74,7 @@ plot_learning_curves(model, block=False)
 # plot_convolution_filters(8, model.layers[0], block=False)
 
 # Load best model
-model = keras.models.load_model('model.h5')
+model = keras.models.load_model('gen/model.h5')
 
 # Evaluate model on validation and test sets
 val_loss, val_accuracy = model.evaluate(x_val, y_val)
@@ -128,8 +128,8 @@ write_model_h_file("../esp32_metric/components/models/include_v2/model_v2.h", de
 write_model_c_file('../esp32_metric/components/models/model_v2.c', tflite_model)
 
 # Save TensorFlow Lite model and print memory
-with open("model.tflite", "wb") as f:
+with open("gen/model.tflite", "wb") as f:
     f.write(tflite_model)
-calc_mem("model.tflite")
+calc_mem("gen/model.tflite")
 
 print('Done.')
