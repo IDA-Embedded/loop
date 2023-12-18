@@ -4,19 +4,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Conv1D, Flatten, MaxPooling1D, Dropout
 
-from preprocess import (
-    preprocess_all,
-    WINDOW_SIZE,
-    SPECTRUM_SIZE,
-    SPECTRUM_TOP,
-    SPECTRUM_SRC,
-    SPECTRUM_DST,
-    SPECTRUM_MEAN,
-    SPECTRUM_STD,
-    SAMPLE_RATE,
-    FRAME_SIZE,
-    FRAME_STRIDE,
-)
+from preprocess import preprocess_all, WINDOW_SIZE, SPECTRUM_SIZE, SPECTRUM_TOP, SPECTRUM_SRC, SPECTRUM_DST, SPECTRUM_MEAN, SPECTRUM_STD, SAMPLE_RATE, FRAME_SIZE, FRAME_STRIDE
 from utils.calc_mem import calc_mem
 from utils.export_tflite import write_model_h_file, write_model_c_file
 from utils.plots import plot_predictions_vs_labels, plot_learning_curves
@@ -38,25 +26,24 @@ def representative_dataset():
 
 
 # Minimize TensorFlow logging
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-
-tf.get_logger().setLevel("ERROR")
+tf.get_logger().setLevel('ERROR')
 
 # Preprocess data if not done already
-if not os.path.exists("gen/x.npy") or not os.path.exists("gen/y.npy"):
-    preprocess_all("../Data/")
+if not os.path.exists('gen/x.npy') or not os.path.exists('gen/y.npy'):
+    preprocess_all('../Data/')
 
 # Load preprocessed data
-x = np.load("gen/x.npy")
-y = np.load("gen/y.npy")
+x = np.load('gen/x.npy')
+y = np.load('gen/y.npy')
 
 # Plot the spectrogram of the entire dataset with labels underneath
 # plot_dataset(x, y, block=True)
 
 # Split into training, validation and test sets
-x_train, x_val, x_test = np.split(x, [int(0.6 * len(x)), int(0.8 * len(x))])
-y_train, y_val, y_test = np.split(y, [int(0.6 * len(y)), int(0.8 * len(y))])
+x_train, x_val, x_test = np.split(x, [int(.6 * len(x)), int(.8 * len(x))])
+y_train, y_val, y_test = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
 
 # Save x/y test for tflite test
 np.save("gen/x_test.npy", x_test)
@@ -72,44 +59,30 @@ y_train = y_train[indices]
 num_positives = np.sum(y)
 num_negatives = len(y) - num_positives
 ratio = num_negatives / num_positives
-print("Negative to positive ratio: ", ratio)
+print('Negative to positive ratio: ', ratio)
 
 # Build and compile model
-print("Building model...")
+print('Building model...')
 model = Sequential()
-model.add(
-    Conv1D(8, 3, activation="relu", input_shape=(WINDOW_SIZE, SPECTRUM_SIZE))
-)  # Output shape (22, 8)
+model.add(Conv1D(8, 3, activation='relu', input_shape=(WINDOW_SIZE, SPECTRUM_SIZE)))  # Output shape (22, 8)
 model.add(MaxPooling1D(2))  # Output shape (11, 8)
 model.add(Dropout(0.2))
-model.add(Conv1D(8, 3, activation="relu"))  # Output shape (9, 8)
+model.add(Conv1D(8, 3, activation='relu'))  # Output shape (9, 8)
 model.add(MaxPooling1D(2))  # Output shape (4, 8)
 model.add(Dropout(0.2))
 model.add(Flatten())  # Output shape (32)
-model.add(Dense(1, activation="sigmoid"))  # Output shape (1)
-model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=0.001),
-    loss="binary_crossentropy",
-    metrics=["accuracy"],
-)
+model.add(Dense(1, activation='sigmoid'))  # Output shape (1)
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy'])
 
 # Print model summary
 model.summary()
 
 # Train model with early stopping; save best model
-print("Training model...")
-early_stopping = keras.callbacks.EarlyStopping(monitor="val_loss", patience=16)
-model_checkpoint = keras.callbacks.ModelCheckpoint(
-    "gen/model.h5", monitor="val_loss", save_best_only=True
-)
-model.fit(
-    x_train,
-    y_train,
-    epochs=100,
-    batch_size=64,
-    validation_data=(x_val, y_val),
-    callbacks=[early_stopping, model_checkpoint],
-)
+print('Training model...')
+early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=16)
+model_checkpoint = keras.callbacks.ModelCheckpoint('gen/model.h5', monitor='val_loss', save_best_only=True)
+model.fit(x_train, y_train, epochs=100, batch_size=64, validation_data=(x_val, y_val),
+          callbacks=[early_stopping, model_checkpoint])
 
 # Plot learning curves
 plot_learning_curves(model, block=False)
@@ -121,7 +94,7 @@ plot_learning_curves(model, block=False)
 # plot_convolution_filters(8, model.layers[0], block=False)
 
 # Load best model
-model = keras.models.load_model("gen/model.h5")
+model = keras.models.load_model('gen/model.h5')
 
 # Evaluate model on validation and test sets
 val_loss, val_accuracy = model.evaluate(x_val, y_val)
@@ -130,24 +103,20 @@ y_pred = model.predict(x_test)
 
 # Print evaluation metrics
 print()
-print("Validation loss:     %.4f" % val_loss)
-print("Validation accuracy: %.4f" % val_accuracy)
-print("Test loss:           %.4f" % test_loss)
-print("Test accuracy:       %.4f" % test_accuracy)
-print("Validation loss:     %.4f" % val_loss)
-print("Validation accuracy: %.4f" % val_accuracy)
-print("Test loss:           %.4f" % test_loss)
-print("Test accuracy:       %.4f" % test_accuracy)
+print('Validation loss:     %.4f' % val_loss)
+print('Validation accuracy: %.4f' % val_accuracy)
+print('Test loss:           %.4f' % test_loss)
+print('Test accuracy:       %.4f' % test_accuracy)
 
 # Print confusion matrix
 y_pred_bool = np.round(y_pred)
 confusion_matrix = np.zeros((2, 2))
 for i in range(len(y_pred_bool)):
     confusion_matrix[int(y_test[i]), int(y_pred_bool[i, 0])] += 1
-print("True positives:     ", int(confusion_matrix[1, 1]))
-print("True negatives:     >", int(confusion_matrix[0, 0]))
-print("False positives:    ", int(confusion_matrix[0, 1]))
-print("False negatives:    ", int(confusion_matrix[1, 0]))
+print('True positives:     ', int(confusion_matrix[1, 1]))
+print('True negatives:     ', int(confusion_matrix[0, 0]))
+print('False positives:    ', int(confusion_matrix[0, 1]))
+print('False negatives:    ', int(confusion_matrix[1, 0]))
 
 
 # Plot predictions vs labels
@@ -175,24 +144,14 @@ defines = {
     "SPECTRUM_TOP": SPECTRUM_TOP,
     "SPECTRUM_SIZE": SPECTRUM_SIZE,
     "SPECTRUM_MEAN": SPECTRUM_MEAN,
-    "SPECTRUM_STD": SPECTRUM_STD,
-    "SPECTRUM_STD": SPECTRUM_STD,
+    "SPECTRUM_STD": SPECTRUM_STD
 }
-declarations = [
-    "const unsigned long SPECTRUM_SRC[] = { "
-    + ", ".join(map(str, SPECTRUM_SRC))
-    + " };",
-    "const unsigned long SPECTRUM_DST[] = { "
-    + ", ".join(map(str, SPECTRUM_DST))
-    + " };",
-    "const unsigned long SPECTRUM_SRC[] = { "
-    + ", ".join(map(str, SPECTRUM_SRC))
-    + " };",
-    "const unsigned long SPECTRUM_DST[] = { "
-    + ", ".join(map(str, SPECTRUM_DST))
-    + " };",
-]
 
+
+declarations = [
+    "const unsigned long SPECTRUM_SRC[] = { " + ", ".join(map(str, SPECTRUM_SRC)) + " };",
+    "const unsigned long SPECTRUM_DST[] = { " + ", ".join(map(str, SPECTRUM_DST)) + " };"
+]
 # Do not inlcude quantized model into the main project
 if not ENABLE_QUANTIZATION:
     write_model_h_file("../ESP-32/main/model.h", defines, declarations)
