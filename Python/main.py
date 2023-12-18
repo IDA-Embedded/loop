@@ -148,13 +148,13 @@ declarations = [
 if ENABLE_QUANTIZATION:
     FILE_NAME = "model_quantized"
     # Do not include quantized model into the main project
-    write_model_h_file(f"../esp32_metric/components/models/include_v2/'model_v2_quan'/{FILE_NAME}_v2.h", defines, declarations)
+    write_model_h_file(f"../esp32_metric/components/models/include_v2/model_v2_quan/{FILE_NAME}_v2.h", defines, declarations)
     write_model_c_file(f"../esp32_metric/components/models/{FILE_NAME}_v2.c", tflite_model)
 else:
     FILE_NAME = "model"
     write_model_h_file("../ESP-32/main/model.h", defines, declarations)
     write_model_c_file("../ESP-32/main/model.c", tflite_model)
-    write_model_h_file(f"../esp32_metric/components/models/include_v2/'model_v2'/{FILE_NAME}_v2.h", defines, declarations)
+    write_model_h_file(f"../esp32_metric/components/models/include_v2/model_v2/{FILE_NAME}_v2.h", defines, declarations)
     write_model_c_file(f"../esp32_metric/components/models/{FILE_NAME}_v2.c", tflite_model)
 
 # Save TensorFlow Lite model and print memory
