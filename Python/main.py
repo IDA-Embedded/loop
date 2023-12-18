@@ -148,10 +148,7 @@ print("True positives:     ", int(confusion_matrix[1, 1]))
 print("True negatives:     >", int(confusion_matrix[0, 0]))
 print("False positives:    ", int(confusion_matrix[0, 1]))
 print("False negatives:    ", int(confusion_matrix[1, 0]))
-print("True positives:     ", int(confusion_matrix[1, 1]))
-print("True negatives:     >", int(confusion_matrix[0, 0]))
-print("False positives:    ", int(confusion_matrix[0, 1]))
-print("False negatives:    ", int(confusion_matrix[1, 0]))
+
 
 # Plot predictions vs labels
 plot_predictions_vs_labels(y_pred, y_test, block=True)
