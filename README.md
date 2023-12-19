@@ -21,12 +21,12 @@ Raw recordings from Loop fitness can be found here : https://anyvej11.dk/loop
 
 ## Workshop slides
 
-* Workshop 1, pt1: https://docs.google.com/presentation/d/1IYGDZZqRrE4ZvU1GUY1HpiN73ZtuhXn9buOHMAe0r3Y
-* Workshop 1, pt2: https://docs.google.com/presentation/d/1Or0dlfwEeps-LqslExg2k3uU2bS3sLQUAZxr2nw6lvo
-* Workshop 2: https://docs.google.com/presentation/d/1cRfUvB82cQw7qil6pJezRVyu-Q3wIUR1_X0M9sBXE_U
-* Workshop 3, pt1: https://docs.google.com/presentation/d/1JoLjX3rePVxhLUhv33q94o3sm2obSHIeEd-6BmAlmUA
-* Workshop 3, pt2: https://docs.google.com/presentation/d/e/2PACX-1vQSEskWAp7qakSjyGhIgF6iSSweX-2eQtBJbIA1a7KJkjtK_I6owz_Y1vjZUSEVK18cLWoZSUAUCjEt/pub?
-* Workshop 3, pt3: https://docs.google.com/presentation/d/1u-gXyeAKtL2nef_diZLR5ulNL9ifhgIZVbEZjKQID7E
+* Workshop 1, pt1: [TinyML Introduction](https://docs.google.com/presentation/d/1IYGDZZqRrE4ZvU1GUY1HpiN73ZtuhXn9buOHMAe0r3Y)
+* Workshop 1, pt2: [TinyML HW/SW](https://docs.google.com/presentation/d/1Or0dlfwEeps-LqslExg2k3uU2bS3sLQUAZxr2nw6lvo)
+* Workshop 2: [TinyML Data prep, model and deployment](https://docs.google.com/presentation/d/1cRfUvB82cQw7qil6pJezRVyu-Q3wIUR1_X0M9sBXE_U)
+* Workshop 3, pt1: [Production Model Developemnt](https://docs.google.com/presentation/d/1JoLjX3rePVxhLUhv33q94o3sm2obSHIeEd-6BmAlmUA)
+* Workshop 3, pt2: [Model optimization through Quantization](https://docs.google.com/presentation/d/e/2PACX-1vQSEskWAp7qakSjyGhIgF6iSSweX-2eQtBJbIA1a7KJkjtK_I6owz_Y1vjZUSEVK18cLWoZSUAUCjEt/pub?)
+* Workshop 3, pt3: [ESP32 Code, profile and optimizing](https://docs.google.com/presentation/d/1u-gXyeAKtL2nef_diZLR5ulNL9ifhgIZVbEZjKQID7E)
 
 ## Workshop videos
 Videos are uploaded as "unlisted" on youtube, use the links below :
