@@ -28,6 +28,13 @@ Raw recordings from Loop fitness can be found here : https://anyvej11.dk/loop
 * Workshop 3, pt2: https://docs.google.com/presentation/d/e/2PACX-1vQSEskWAp7qakSjyGhIgF6iSSweX-2eQtBJbIA1a7KJkjtK_I6owz_Y1vjZUSEVK18cLWoZSUAUCjEt/pub?
 * Workshop 3, pt3: https://docs.google.com/presentation/d/1u-gXyeAKtL2nef_diZLR5ulNL9ifhgIZVbEZjKQID7E
 
+## Workshop videos
+Videos are uploaded as "unlisted" on youtube, use the links below :
+
+* Workshop 1 : https://youtu.be/4ktrJHBaMmQ
+* Workshop 2 : https://youtu.be/sm6M5oDPHAM
+* Workshop 3 : https://youtu.be/zw0UyR8W64w
+
 ## Getting started - Python and TensorFlow
 
 * It's generally recommended to use python virtual environments when working with different python projects to handle dependencies/packages.
